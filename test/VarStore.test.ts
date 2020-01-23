@@ -8,9 +8,9 @@ describe("VarStore", () => {
         expect(() => new VarStore(null)).to.throw();
         expect(() => new VarStore(undefined)).to.throw();
         expect(() => new VarStore('')).to.throw();
-    })
+    });
 
-    it('Create a simple varstore and read/write values', () => {
+    it('Check for simple varstore and read/write values', () => {
         const store: VarStore = new VarStore('test');
 
         store.setValue('firstName', 'hello');
@@ -42,21 +42,28 @@ describe("VarStore", () => {
 
         store.setValue('name', { age: 21 });
         expect(store.getValue('name')).to.be.eql({ age: 21 });
+
+        store.setValue('name', true);
+        expect(store.getValue('name')).to.be.true;
+
+
+        store.setValue('name', false);
+        expect(store.getValue('name')).to.be.false;
     });
 
     it("Child object tests", () => {
         const store: VarStore = new VarStore('test');
 
         const employee = {
-            name : {
-                username : 'sangupta',
-                firstName : 'Sandeep',
-                lastName : 'Gupta'
+            name: {
+                username: 'sangupta',
+                firstName: 'Sandeep',
+                lastName: 'Gupta'
             },
-            year : 2020,
-            address : {
-                web : {
-                    url : 'sangupta.com'
+            year: 2020,
+            address: {
+                web: {
+                    url: 'sangupta.com'
                 }
             }
         }
@@ -66,4 +73,70 @@ describe("VarStore", () => {
         expect(store.getValue('employee.address.web.url')).to.equal('sangupta.com');
     });
 
+    it("Check pushing and popping context", () => {
+        const store: VarStore = new VarStore('test');
+        store.setValue('name', 'first');
+
+        expect(store.getValue('name')).to.equal('first');
+
+        // push context
+        store.pushContext({ name: 'second' });
+        expect(store.getValue('name')).to.equal('second');
+
+        // push again
+        store.pushContext({ name: 'third' });
+        expect(store.getValue('name')).to.equal('third');
+
+        // pop
+        store.popContext();
+        expect(store.getValue('name')).to.equal('second');
+
+        // push one more
+        store.pushContext({ name: 'fourth' });
+        expect(store.getValue('name')).to.equal('fourth');
+
+        // pop
+        store.popContext();
+        expect(store.getValue('name')).to.equal('second');
+
+        // pop
+        store.popContext();
+        expect(store.getValue('name')).to.equal('first');
+    });
+
+    it("Check forking", () => {
+        const store: VarStore = new VarStore('test');
+        const employee = {
+            name: {
+                username: 'sangupta',
+                firstName: 'Sandeep',
+                lastName: 'Gupta'
+            }
+        };
+
+        store.setValue('employee', employee);
+        expect(store.getValue('employee.name.username')).to.equal('sangupta');
+
+        // just fork and test
+        const forked: VarStore = store.fork('forked');
+
+        expect(forked.getValue('employee.name.username')).to.equal('sangupta');
+        expect(store.getValue('employee.name.username')).to.equal('sangupta');
+
+        // add to fork
+        const employee2 = {
+            name: {
+                username: 'helloworld',
+                firstName: 'Hello',
+                lastName: 'World'
+            }
+        };
+        forked.setValue('employee', employee2);
+        expect(forked.getValue('employee.name.username')).to.equal('helloworld');
+        expect(store.getValue('employee.name.username')).to.equal('sangupta');
+    });
+
+    it("Check fork/push-pop context/arrays/child objects", () => {
+
+    });
 });
