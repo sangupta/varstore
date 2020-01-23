@@ -1,3 +1,7 @@
+/**
+ * Interface to specify contract to return a
+ * value and its existence in store.
+ */
 export interface ExistsWithValue {
 
     /**
@@ -12,14 +16,18 @@ export interface ExistsWithValue {
 
 }
 
+/**
+ * Constant that indicates that value does not exist, and is thus undefined
+ */
 const KEY_NOT_EXISTS_VALUE: ExistsWithValue = { exists: false, value: undefined };
 
 /**
  * Check if a key exists in the given context and also return
  * its value if it is available.
  * 
- * @param context 
- * @param id 
+ * @param context context to look variable in
+ * 
+ * @param id the variable to look for
  */
 export function getExistsWithValue(context: object, id: string): any {
     if (!id) {
@@ -45,8 +53,9 @@ export function getExistsWithValue(context: object, id: string): any {
  * Find a variable in the store that uses dot notation to
  * represent child properties within an object.
  * 
- * @param context 
- * @param id 
+ * @param context context to look variable in
+ * 
+ * @param id the variable to look for
  */
 function getExistsWithValueComplex(context: object, id: string): ExistsWithValue {
     // split up on dots first
@@ -82,8 +91,9 @@ function getExistsWithValueComplex(context: object, id: string): ExistsWithValue
  * Find a variable in the store that just specifies a simple
  * string to reference a variable.
  * 
- * @param context 
- * @param id 
+ * @param context context to look variable in
+ * 
+ * @param id the variable to look for
  */
 function getExistsWithValueSimple(context: object, id: string): ExistsWithValue {
     if (!context.hasOwnProperty(id)) {
@@ -97,8 +107,9 @@ function getExistsWithValueSimple(context: object, id: string): ExistsWithValue 
  * Find a variable in the store that is specified as an array
  * element access with index value.
  * 
- * @param context 
- * @param id 
+ * @param context context to look variable in
+ * 
+ * @param id the variable to look for
  */
 function getExistsWithValueForArray(context: object, id: string): ExistsWithValue {
     return KEY_NOT_EXISTS_VALUE;
