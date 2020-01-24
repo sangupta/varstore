@@ -1,6 +1,7 @@
 {
     "name": "varstore",
     "description": "A simple scoped variable store",
+    "version": "0.1.0",
     "scripts": {
         "test": "mocha --exit --require ts-node/register --colors test/**/*.ts",
         "coverage" : "nyc npm run test"
