@@ -31,7 +31,7 @@ const KEY_NOT_EXISTS_VALUE: ExistsWithValue = { exists: false, value: undefined 
  */
 export function getExistsWithValue(context: object, id: string): any {
     if (!id) {
-        return undefined;
+        return KEY_NOT_EXISTS_VALUE;
     }
 
     // check if we have a dot notation
@@ -112,7 +112,40 @@ function getExistsWithValueSimple(context: object, id: string): ExistsWithValue 
  * @param id the variable to look for
  */
 function getExistsWithValueForArray(context: object, id: string): ExistsWithValue {
-    return KEY_NOT_EXISTS_VALUE;
+    const start: number = id.indexOf('[');
+    const end: number = id.indexOf(']');
+    const variable: string = id.substring(0, start);
+    const index: string = id.substring(start + 1, end);
+
+    let result: ExistsWithValue = getExistsWithValueSimple(context, variable);
+    if (!result.exists) {
+        return KEY_NOT_EXISTS_VALUE;
+    }
+
+    if (typeof result.value === 'undefined') {
+        throw new Error('Variable not initialized');
+    }
+
+    if (result.value === null) {
+        throw new Error('Variable is null');
+    }
+
+    const isArray: boolean = Array.isArray(result.value);
+    const isObject: boolean = typeof result.value === 'object';
+
+    if (!(isArray || isObject)) {
+        throw new Error('Variable is not an array/object');
+    }
+
+    // parse the index now
+    let num: number = parseInt(index);
+    if (isNaN(num)) {
+        // try string based key operation
+        return { exists: true, value: result.value[index] };
+    }
+
+    // try index based return
+    return { exists: true, value: result.value[index] };
 }
 
 /**

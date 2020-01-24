@@ -51,6 +51,26 @@ describe("VarStore", () => {
         expect(store.getValue('name')).to.be.false;
     });
 
+    it("Check for arrays", () => {
+        const store: VarStore = new VarStore('test');
+        const array: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        
+        store.setValue('array', array);
+        expect(store.getValue('array')).to.eql(array);
+
+        expect(store.getValue('array[0]')).to.eql(1);
+        expect(store.getValue('array[1]')).to.eql(2);
+        expect(store.getValue('array[2]')).to.eql(3);
+        expect(store.getValue('array[3]')).to.eql(4);
+        expect(store.getValue('array[4]')).to.eql(5);
+        expect(store.getValue('array[5]')).to.eql(6);
+        expect(store.getValue('array[6]')).to.eql(7);
+        expect(store.getValue('array[7]')).to.eql(8);
+        expect(store.getValue('array[8]')).to.eql(9);
+        expect(store.getValue('array[9]')).to.eql(10);
+
+    });
+
     it("Child object tests", () => {
         const store: VarStore = new VarStore('test');
 
