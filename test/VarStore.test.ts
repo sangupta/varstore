@@ -54,7 +54,7 @@ describe("VarStore", () => {
     it("Check for arrays", () => {
         const store: VarStore = new VarStore('test');
         const array: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        
+
         store.setValue('array', array);
         expect(store.getValue('array')).to.eql(array);
 
@@ -91,6 +91,41 @@ describe("VarStore", () => {
         store.setValue('employee', employee);
         expect(store.getValue('employee.name.username')).to.equal('sangupta');
         expect(store.getValue('employee.address.web.url')).to.equal('sangupta.com');
+    });
+
+    it("Check arrays and objects together", () => {
+        const store: VarStore = new VarStore('test');
+        const data = {
+            type: "employees",
+            employees: [
+                {
+                    id: "emp1",
+                    name: {
+                        first: "hello",
+                        second: "world"
+                    }
+                },
+                {
+                    id: "emp2",
+                    name: {
+                        first: "tom",
+                        last: "jerry"
+                    }
+                },
+                {
+                    id: "emp3",
+                    name: {
+                        first: "mickey",
+                        last: "mouse"
+                    }
+                }
+            ]
+        };
+
+        store.setValue("data", data);
+        expect(store.getValue('data.employees[0].name.first')).to.equal('hello');
+        expect(store.getValue('data.employees[1].name.first')).to.equal('tom');
+        expect(store.getValue('data.employees[2].name.first')).to.equal('mickey');
     });
 
     it("Check pushing and popping context", () => {
