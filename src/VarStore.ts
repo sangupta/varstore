@@ -39,7 +39,7 @@ export default class VarStore {
      * @param initialState the initial state of this store
      */
     constructor(name: string, initialState: object = {}, parent: VarStore = undefined) {
-        if(!name || name.trim() === '') {
+        if (!name || name.trim() === '') {
             throw new Error('Name is required');
         }
 
@@ -67,12 +67,41 @@ export default class VarStore {
     }
 
     /**
+     * Check if the variable exists in the store or
+     * not.
+     * 
+     * @param id 
+     */
+    exists(id: string): boolean {
+        const result: VarStoreUtils.ExistsWithValue = this.getVariable(id);
+        if (result) {
+            return result.exists;
+        }
+
+        return false;
+    }
+
+    /**
      * Get the value of the variable stored in
      * this store.
      * 
      * @param id
      */
     getValue(id: string): any {
+        const result: VarStoreUtils.ExistsWithValue = this.getVariable(id);
+        if (result && result.exists) {
+            return result.value;
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Get the variable and its existence from the store.
+     * 
+     * @param id 
+     */
+    private getVariable(id: string): VarStoreUtils.ExistsWithValue {
         if (this.stack.length === 0) {
             return undefined;
         }
@@ -83,7 +112,7 @@ export default class VarStore {
 
             const result: VarStoreUtils.ExistsWithValue = VarStoreUtils.getExistsWithValue(context, id);
             if (result.exists) {
-                return result.value;
+                return result;
             }
         }
 
@@ -94,7 +123,7 @@ export default class VarStore {
 
             const result: VarStoreUtils.ExistsWithValue = VarStoreUtils.getExistsWithValue(baseContext, id);
             if (result.exists) {
-                return result.value;
+                return result;
             }
 
             // loop through parents

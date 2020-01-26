@@ -194,4 +194,30 @@ describe("VarStore", () => {
     it("Check fork/push-pop context/arrays/child objects", () => {
 
     });
+
+    it("Check for set/get value: basic props", () => {
+        const store: VarStore = new VarStore('test');
+
+        store.setValue("name", "hello world");
+        store.setValue("empID", 9999);
+        store.setValue("employed", true);
+        store.setValue("retired", false);
+
+        expect(store.getValue('name')).to.equal('hello world');
+        expect(store.getValue('empID')).to.equal(9999);
+        expect(store.getValue('employed')).to.true;
+        expect(store.getValue('retired')).to.false;
+    });
+
+    it("Check for set/get value: child", () => {
+        const store: VarStore = new VarStore('test');
+
+        store.setValue("emp", { empID: 9999 });
+        store.setValue("emp.name.first", "hello");
+        store.setValue("emp.name.last", "world");
+
+        expect(store.getValue('emp.name.first')).to.equal("hello");
+        expect(store.getValue('emp.name.last')).to.equal("world");
+        expect(store.getValue('emp.empID')).to.equal(9999);
+    })
 });

@@ -19,7 +19,7 @@ export interface ExistsWithValue {
 /**
  * Constant that indicates that value does not exist, and is thus undefined
  */
-const KEY_NOT_EXISTS_VALUE: ExistsWithValue = { exists: false, value: undefined };
+const KEY_NOT_EXISTS: ExistsWithValue = { exists: false, value: undefined };
 
 /**
  * Check if a key exists in the given context and also return
@@ -31,7 +31,7 @@ const KEY_NOT_EXISTS_VALUE: ExistsWithValue = { exists: false, value: undefined 
  */
 export function getExistsWithValue(context: object, id: string): any {
     if (!id) {
-        return KEY_NOT_EXISTS_VALUE;
+        return KEY_NOT_EXISTS;
     }
 
     // check if we have a dot notation
@@ -66,8 +66,9 @@ function getExistsWithValueComplex(context: object, id: string): ExistsWithValue
     // iterate over each token/dot
     for (let index: number = 0; index < tokens.length; index++) {
         if (typeof currentContext === 'undefined') {
-
+            return KEY_NOT_EXISTS;
         }
+
         let token: string = tokens[index];
         let result: ExistsWithValue;
 
@@ -97,7 +98,7 @@ function getExistsWithValueComplex(context: object, id: string): ExistsWithValue
  */
 function getExistsWithValueSimple(context: object, id: string): ExistsWithValue {
     if (!context.hasOwnProperty(id)) {
-        return KEY_NOT_EXISTS_VALUE;
+        return KEY_NOT_EXISTS;
     }
 
     return { exists: true, value: context[id] };
@@ -119,7 +120,7 @@ function getExistsWithValueForArray(context: object, id: string): ExistsWithValu
 
     let result: ExistsWithValue = getExistsWithValueSimple(context, variable);
     if (!result.exists) {
-        return KEY_NOT_EXISTS_VALUE;
+        return KEY_NOT_EXISTS;
     }
 
     if (typeof result.value === 'undefined') {
@@ -160,8 +161,57 @@ export function setValue(context: object, id: string, value: any): boolean {
         return false;
     }
 
-    context[id] = value;
+    if (!id) {
+        return false;
+    }
+
+    // lets split on dot
+    // even if the variable has no dot notation this will have no effect
+    const tokens: string[] = id.split('.');
+
+    // lets find the parent object to which we need to add
+    // this value
+    let current: object = context;
+    for (let index = 0; index < tokens.length - 1; index++) {
+        let token: string = tokens[index];
+        const isArray: boolean = token.includes('[');
+
+        if (!isArray) {
+            // property is not indexed array
+            if (current.hasOwnProperty(token)) {
+                current = current[token];
+                continue;
+            }
+
+            // the object does not exist
+            // we need to create one here
+            const created: object = {};
+            current[token] = created;
+            current = created;
+            continue;
+        }
+
+        // this is the part where this is an array
+        throw new Error('case "array in parent" not yet handled');
+    }
+
+    // `current` at this point contains the object
+    // to which the value is to be assigned
+    const lastToken:string = tokens[tokens.length - 1];
+
+    // check if last token itself is an array
+    const isArray:boolean = lastToken.includes('[');
+    if(isArray) {
+        throw new Error('case "array in last" not yet handled');
+    }
+
+    // for simple case set the value and we are done
+    current[lastToken] = value;
     return true;
+}
+
+function setValueArray(context: object, id: string, value: any): boolean {
+    return false;
 }
 
 /**
