@@ -174,9 +174,9 @@ export function setValue(context: object, id: string, value: any): boolean {
     let current: object = context;
     for (let index = 0; index < tokens.length - 1; index++) {
         let token: string = tokens[index];
-        const isArray: boolean = token.includes('[');
+        const isArray: number = token.indexOf('[');
 
-        if (!isArray) {
+        if (isArray < 0) {
             // property is not indexed array
             if (current.hasOwnProperty(token)) {
                 current = current[token];
@@ -192,26 +192,48 @@ export function setValue(context: object, id: string, value: any): boolean {
         }
 
         // this is the part where this is an array
-        throw new Error('case "array in parent" not yet handled');
+        token = token.substring(0, isArray);
+        const end:number = token.indexOf(']');
+        let arrayIndex = token.substring(isArray + 1, end);
+
+        // find the array
+        if(current.hasOwnProperty(token)) {
+            current = current[token];
+        } else {
+            const array = [];
+            current[token] = array;
+            current = array;
+        }
+
+        // just get the item
+        let indexNum = parseInt(arrayIndex);
+        current = current[indexNum];
     }
 
     // `current` at this point contains the object
     // to which the value is to be assigned
-    const lastToken:string = tokens[tokens.length - 1];
+    let lastToken:string = tokens[tokens.length - 1];
 
     // check if last token itself is an array
-    const isArray:boolean = lastToken.includes('[');
-    if(isArray) {
-        throw new Error('case "array in last" not yet handled');
+    const isArray:number = lastToken.indexOf('[');
+    if(isArray >= 0) {
+        lastToken = lastToken.substring(0, isArray);
+        const end:number = lastToken.indexOf(']');
+        let arrayIndex = lastToken.substring(isArray + 1, end);
+        let indexNum = parseInt(arrayIndex);
+
+        let array = current[lastToken];
+        if(typeof array === 'undefined') {
+            current[lastToken] = [];
+        }
+
+        array[indexNum] = value;
+        return true;
     }
 
     // for simple case set the value and we are done
     current[lastToken] = value;
     return true;
-}
-
-function setValueArray(context: object, id: string, value: any): boolean {
-    return false;
 }
 
 /**

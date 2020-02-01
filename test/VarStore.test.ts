@@ -219,5 +219,39 @@ describe("VarStore", () => {
         expect(store.getValue('emp.name.first')).to.equal("hello");
         expect(store.getValue('emp.name.last')).to.equal("world");
         expect(store.getValue('emp.empID')).to.equal(9999);
-    })
+    });
+
+    it("Check values inside nested for loops", () => {
+        const store: VarStore = new VarStore('test');
+
+        for (let i = 0; i < 100; i++) {
+            store.setValue('i', i);
+            for (let j = 0; j < 100; j++) {
+                store.setValue('j', j);
+                expect(store.getValue('j')).to.equal(j);
+            }
+
+            expect(store.getValue('i')).to.equal(i);
+        }
+    });
+
+    it("Check values inside recursive function call", () => {
+        const store: VarStore = new VarStore('test');
+
+        const fact = function (x: number): number {
+            if (x == 1) {
+                return 1;
+            }
+            store.setValue('x', x);
+            store.pushContext();
+            let value: number = x * fact(x - 1);
+            store.popContext();
+            expect(store.getValue('x')).to.equal(x);
+
+            return value;
+        }
+
+        expect(fact(10)).to.equal(3628800);
+    });
+
 });
