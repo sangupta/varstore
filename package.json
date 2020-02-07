@@ -2,9 +2,19 @@
     "name": "varstore",
     "description": "A simple scoped variable store",
     "version": "0.1.0",
+    "main" : "src/VarStore",
     "scripts": {
         "test": "mocha --exit --require ts-node/register --colors test/**/*.ts",
         "coverage" : "nyc npm run test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sangupta/varstore"
+    },
+    "author": {
+        "name": "Sandeep Gupta",
+        "email": "sangupta@adobe.com",
+        "url": "https://sangupta.com"
     },
     "devDependencies": {
         "typescript": "^3.7.5",
