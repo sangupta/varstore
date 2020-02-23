@@ -2,7 +2,7 @@
 
 The `varstore` project is an experimental JavaScript project
 which was born as I experiment with writing language emulators
-for say Logo, GWBasic etc.
+specifically a mix of Logo/GWBasic at this point.
 
 `varstore` provides a scoped approach to storing variable values
 and then letting you access them as you need. At maturity, `varstore`
@@ -17,28 +17,25 @@ Let's see how far can I go.
 
 Let's take the following block of code:
 
-```
+```java
 int main(String[] args) {
     int x = 10;
-    System.out.println(x);                      // line 1
-
+    System.out.println(x);
     for(int i = 0; i < 10; i++) {
-        System.out.println(i, x);               // line 2
-
+        System.out.println(i, x);
         for(int j = 100; j < 110; j++) {
-            System.out.println(j, i, x);        // line 3
+            System.out.println(j, i, x);
         }
-
     }
-
 }
 ```
 
-Say, you are writing an emulator for above. `varstore` can come
-in handy when writing an emulator for a language such as above.
-See annotations on right hand side on how to use it:
+Say, you are writing an emulator for above pseudo-code. 
+`varstore` can come in handy when writing an emulator 
+for a language such as above. See annotations on right 
+hand side on how to use it:
 
-```
+```java
 int main(String[] args) {                       // const store = new VarStore('app');
     int x = 10;                                 // store.setValue('x', 10);
     System.out.println(x);                      // store.getValue('x');
@@ -58,6 +55,12 @@ int main(String[] args) {                       // const store = new VarStore('a
 
 }
 ```
+
+## Roadmap
+
+* Implement `super`
+* Implement variable based `array` access
+* Implement `array` index operations from start/end - may be use `+3/-3` to handle
 
 ## Versioning
 
