@@ -490,7 +490,7 @@ export default class VarStoreParser {
     gobbleArguments = function (termination) {
         var ch_i, args = [], node, closed = false;
         var separator_count = 0;
-        while (this.index < length) {
+        while (this.index < this.length) {
             this.gobbleSpaces();
             ch_i = this.exprICode(this.index);
             if (ch_i === termination) { // done parsing
