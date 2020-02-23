@@ -4,6 +4,28 @@
  * Refer https://github.com/soney/jsep for more details
  */
 
+export interface Node {
+    type: string;
+    name?: string;
+    operator?: string;
+    left?: Node;
+    right?: Node;
+    argument?: Node;
+    arguments?: Node[];
+    prefix?: boolean;
+    value?: any;
+    raw?: string;
+    computed?: boolean;
+    object?: Node;
+    property?: Node;
+    body?: Node[];
+    elements?: Node[];
+    callee?: Node;
+    test?: Node;
+    consequent?: Node;
+    alternate?: Node;
+};
+
 /**
  * This is the full set of types that any JSEP node can be.
  * Store them here to save space when minified
@@ -78,28 +100,6 @@ const literals = {
 };
 
 const this_str: string = 'this';
-
-interface Node {
-    type: string;
-    name?: string;
-    operator?: string;
-    left?: Node;
-    right?: Node;
-    argument?: Node | boolean;
-    arguments?: Node[];
-    prefix?: boolean;
-    value?: any;
-    raw?: string;
-    computed?: boolean;
-    object?: Node;
-    property?: Node;
-    body?: Node[];
-    elements?: Node[];
-    callee?: Node;
-    test?: Node;
-    consequent?: Node;
-    alternate?: Node;
-};
 
 /**
  * Returns the precedence of a binary operator or `0` if it isn't a binary operator
@@ -176,7 +176,7 @@ export default class VarStoreParser {
         this.length = expr.length;
     }
 
-    static parse(expr: string): object {
+    static parse(expr: string): Node {
         return new VarStoreParser(expr).parseExpr();
     }
 
@@ -540,9 +540,11 @@ export default class VarStoreParser {
     gobbleArguments(termination: number): Node[] {
         let ch_i: number, args: any[] = [], node: Node, closed: boolean = false;
         let separator_count: number = 0;
+
         while (this.index < this.length) {
             this.gobbleSpaces();
             ch_i = this.exprICode(this.index);
+
             if (ch_i === termination) { // done parsing
                 closed = true;
                 this.index++;
@@ -587,7 +589,7 @@ export default class VarStoreParser {
      */
     gobbleVariable(): Node {
         let ch_i: number, node: Node;
-        
+
         ch_i = this.exprICode(this.index);
 
         if (ch_i === OPAREN_CODE) {
@@ -598,10 +600,12 @@ export default class VarStoreParser {
 
         this.gobbleSpaces();
         ch_i = this.exprICode(this.index);
+
         while (ch_i === PERIOD_CODE || ch_i === OBRACK_CODE || ch_i === OPAREN_CODE) {
             this.index++;
             if (ch_i === PERIOD_CODE) {
                 this.gobbleSpaces();
+
                 node = {
                     type: MEMBER_EXP,
                     computed: false,
@@ -615,11 +619,14 @@ export default class VarStoreParser {
                     object: node,
                     property: this.gobbleExpression()
                 };
+
                 this.gobbleSpaces();
+
                 ch_i = this.exprICode(this.index);
                 if (ch_i !== CBRACK_CODE) {
                     this.throwError('Unclosed [', this.index);
                 }
+
                 this.index++;
             } else if (ch_i === OPAREN_CODE) {
                 // A function call is being made; gobble all the arguments
@@ -629,9 +636,11 @@ export default class VarStoreParser {
                     callee: node
                 };
             }
+
             this.gobbleSpaces();
             ch_i = this.exprICode(this.index);
         }
+
         return node;
     }
 
