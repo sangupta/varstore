@@ -8,29 +8,29 @@
  * This is the full set of types that any JSEP node can be.
  * Store them here to save space when minified
  */
-const COMPOUND = 'Compound',
-    IDENTIFIER = 'Identifier',
-    MEMBER_EXP = 'MemberExpression',
-    LITERAL = 'Literal',
-    THIS_EXP = 'ThisExpression',
-    CALL_EXP = 'CallExpression',
-    UNARY_EXP = 'UnaryExpression',
-    BINARY_EXP = 'BinaryExpression',
-    LOGICAL_EXP = 'LogicalExpression',
-    CONDITIONAL_EXP = 'ConditionalExpression',
-    ARRAY_EXP = 'ArrayExpression',
+const COMPOUND: string = 'Compound',
+    IDENTIFIER: string = 'Identifier',
+    MEMBER_EXP: string = 'MemberExpression',
+    LITERAL: string = 'Literal',
+    THIS_EXP: string = 'ThisExpression',
+    CALL_EXP: string = 'CallExpression',
+    UNARY_EXP: string = 'UnaryExpression',
+    BINARY_EXP: string = 'BinaryExpression',
+    LOGICAL_EXP: string = 'LogicalExpression',
+    CONDITIONAL_EXP: string = 'ConditionalExpression',
+    ARRAY_EXP: string = 'ArrayExpression',
 
-    PERIOD_CODE = 46, // '.'
-    COMMA_CODE = 44, // ','
-    SQUOTE_CODE = 39, // single quote
-    DQUOTE_CODE = 34, // double quotes
-    OPAREN_CODE = 40, // (
-    CPAREN_CODE = 41, // )
-    OBRACK_CODE = 91, // [
-    CBRACK_CODE = 93, // ]
-    QUMARK_CODE = 63, // ?
-    SEMCOL_CODE = 59, // ;
-    COLON_CODE = 58; // :
+    PERIOD_CODE: number = 46, // '.'
+    COMMA_CODE: number = 44, // ','
+    SQUOTE_CODE: number = 39, // single quote
+    DQUOTE_CODE: number = 34, // double quotes
+    OPAREN_CODE: number = 40, // (
+    CPAREN_CODE: number = 41, // )
+    OBRACK_CODE: number = 91, // [
+    CBRACK_CODE: number = 93, // ]
+    QUMARK_CODE: number = 63, // ?
+    SEMCOL_CODE: number = 59, // ;
+    COLON_CODE: number = 58; // :
 
 /**
  * Use a quickly-accessible map to store all of the unary operators
@@ -67,9 +67,9 @@ function getMaxKeyLen(obj: object): number {
     return max_len;
 }
 
-const max_unop_len = getMaxKeyLen(unary_ops);
+const max_unop_len: number = getMaxKeyLen(unary_ops);
 
-const max_binop_len = getMaxKeyLen(binary_ops);
+const max_binop_len: number = getMaxKeyLen(binary_ops);
 
 const literals = {
     'true': true,
@@ -77,14 +77,36 @@ const literals = {
     'null': null
 };
 
-const this_str = 'this';
+const this_str: string = 'this';
+
+interface Node {
+    type: string;
+    name?: string;
+    operator?: string;
+    left?: Node;
+    right?: Node;
+    argument?: Node | boolean;
+    arguments?: Node[];
+    prefix?: boolean;
+    value?: any;
+    raw?: string;
+    computed?: boolean;
+    object?: Node;
+    property?: Node;
+    body?: Node[];
+    elements?: Node[];
+    callee?: Node;
+    test?: Node;
+    consequent?: Node;
+    alternate?: Node;
+};
 
 /**
  * Returns the precedence of a binary operator or `0` if it isn't a binary operator
  * 
  * @param op_val 
  */
-function binaryPrecedence(op_val) {
+function binaryPrecedence(op_val: string): number {
     return binary_ops[op_val] || 0;
 }
 
@@ -97,8 +119,8 @@ function binaryPrecedence(op_val) {
  * @param left 
  * @param right 
  */
-function createBinaryExpression(operator, left, right) {
-    var type = (operator === '||' || operator === '&&') ? LOGICAL_EXP : BINARY_EXP;
+function createBinaryExpression(operator: string, left: Node, right: Node): Node {
+    let type = (operator === '||' || operator === '&&') ? LOGICAL_EXP : BINARY_EXP;
     return {
         type: type,
         operator: operator,
@@ -139,8 +161,14 @@ export default class VarStoreParser {
      */
     index = 0;
 
+    /**
+     * The expression passed for parsing
+     */
     expr: string;
 
+    /**
+     * Length of the expression that was passed
+     */
     length: number;
 
     constructor(expr: string) {
@@ -152,16 +180,16 @@ export default class VarStoreParser {
         return new VarStoreParser(expr).parseExpr();
     }
 
-    exprI(i) {
+    exprI(i: number): string {
         return this.expr.charAt(i);
     }
 
-    exprICode(i) {
+    exprICode(i: number): number {
         return this.expr.charCodeAt(i);
     }
 
-    throwError(message, index) {
-        var error: any = new Error(message + ' at character ' + index);
+    throwError(message: string, index: number): void {
+        let error: any = new Error(message + ' at character ' + index);
         error.index = index;
         error.description = message;
         throw error;
@@ -170,8 +198,8 @@ export default class VarStoreParser {
     /**
      * Push `index` up to the next non-space character
      */
-    gobbleSpaces() {
-        var ch = this.exprICode(this.index);
+    gobbleSpaces(): void {
+        let ch: number = this.exprICode(this.index);
         // space or tab
         while (ch === 32 || ch === 9 || ch === 10 || ch === 13) {
             ch = this.exprICode(++this.index);
@@ -181,9 +209,9 @@ export default class VarStoreParser {
     /**
      * The main parsing function. Much of this code is dedicated to ternary expressions
      */
-    gobbleExpression() {
-        let test = this.gobbleBinaryExpression();
-        let consequent, alternate;
+    gobbleExpression(): Node {
+        let test: Node = this.gobbleBinaryExpression();
+        let consequent: Node, alternate: Node;
 
         this.gobbleSpaces();
 
@@ -194,13 +222,16 @@ export default class VarStoreParser {
             if (!consequent) {
                 this.throwError('Expected expression', this.index);
             }
+
             this.gobbleSpaces();
+
             if (this.exprICode(this.index) === COLON_CODE) {
                 this.index++;
                 alternate = this.gobbleExpression();
                 if (!alternate) {
                     this.throwError('Expected expression', this.index);
                 }
+
                 return {
                     type: CONDITIONAL_EXP,
                     test: test,
@@ -221,9 +252,12 @@ export default class VarStoreParser {
      * and move down from 3 to 2 to 1 character until a matching binary operation is found
      * then, return that binary operation
      */
-    gobbleBinaryOp() {
+    gobbleBinaryOp(): string {
         this.gobbleSpaces();
-        var biop, to_check = this.expr.substr(this.index, max_binop_len), tc_len = to_check.length;
+
+        let to_check: string = this.expr.substr(this.index, max_binop_len);
+        let tc_len: number = to_check.length;
+
         while (tc_len > 0) {
             // Don't accept a binary op when it is an identifier.
             // Binary ops that start with a identifier-valid character must be followed
@@ -235,17 +269,20 @@ export default class VarStoreParser {
                 this.index += tc_len;
                 return to_check;
             }
+
             to_check = to_check.substr(0, --tc_len);
         }
-        return false;
+
+        return undefined;
     }
 
     /**
      * This function is responsible for gobbling an individual expression,
      * e.g. `1`, `1+2`, `a+(b*2)-Math.sqrt(2)`
      */
-    gobbleBinaryExpression() {
-        var ch_i, node, biop, prec, stack, biop_info, left, right, i, cur_biop;
+    gobbleBinaryExpression(): Node {
+        let node: Node, biop: string, prec: number, stack: any[], biop_info;
+        let left: Node, right: Node, i: number, cur_biop: string;
 
         // First, try to get the leftmost thing
         // Then, check to see if there's a binary operator operating on that leftmost thing
@@ -306,8 +343,8 @@ export default class VarStoreParser {
      * An individual part of a binary expression:
      * e.g. `foo.bar(baz)`, `1`, `"abc"`, `(a % 2)` (because it's in parenthesis)
      */
-    gobbleToken = function () {
-        var ch, to_check, tc_len;
+    gobbleToken(): Node {
+        let ch: number, to_check: string, tc_len: number;
 
         this.gobbleSpaces();
         ch = this.exprICode(this.index);
@@ -351,15 +388,16 @@ export default class VarStoreParser {
             return this.gobbleVariable();
         }
 
-        return false;
+        return undefined;
     }
 
     /**
      * Parse simple numeric literals: `12`, `3.4`, `.5`. Do this by using a string to
      * keep track of everything in the numeric literal and then calling `parseFloat` on that string
      */
-    gobbleNumericLiteral() {
-        var number = '', ch, chCode;
+    gobbleNumericLiteral(): Node {
+        let number: string = '', ch: string, chCode: number;
+
         while (isDecimalDigit(this.exprICode(this.index))) {
             number += this.exprI(this.index++);
         }
@@ -395,7 +433,7 @@ export default class VarStoreParser {
         if (isIdentifierStart(chCode)) {
             this.throwError('Variable names cannot start with a number (' + number + this.exprI(this.index) + ')', this.index);
         }
-        
+
         if (chCode === PERIOD_CODE) {
             this.throwError('Unexpected period', this.index);
         }
@@ -411,8 +449,10 @@ export default class VarStoreParser {
      * Parses a string literal, staring with single or double quotes with basic support for escape codes
      * e.g. `"hello world"`, `'this is\nJSEP'`
      */
-    gobbleStringLiteral = function () {
-        var str = '', quote = this.exprI(this.index++), closed = false, ch;
+    gobbleStringLiteral(): Node {
+        let str: string = '';
+        let quote: string = this.exprI(this.index++);
+        let closed: boolean = false, ch: string;
 
         while (this.index < this.length) {
             ch = this.exprI(this.index++);
@@ -453,8 +493,8 @@ export default class VarStoreParser {
      * Also, this function checks if that identifier is a literal:
      * (e.g. `true`, `false`, `null`) or `this`
      */
-    gobbleIdentifier() {
-        var ch = this.exprICode(this.index), start = this.index, identifier;
+    gobbleIdentifier(): Node {
+        let ch: number = this.exprICode(this.index), start = this.index, identifier;
 
         if (!isIdentifierStart(ch)) {
             this.throwError('Unexpected ' + this.exprI(this.index), this.index);
@@ -463,12 +503,13 @@ export default class VarStoreParser {
         this.index++;
         while (this.index < this.length) {
             ch = this.exprICode(this.index);
-            if (isIdentifierPart(ch)) {
-                this.index++;
-            } else {
+            if (!isIdentifierPart(ch)) {
                 break;
             }
+
+            this.index++;
         }
+
         identifier = this.expr.slice(start, this.index);
 
         if (literals.hasOwnProperty(identifier)) {
@@ -477,14 +518,16 @@ export default class VarStoreParser {
                 value: literals[identifier],
                 raw: identifier
             };
-        } else if (identifier === this_str) {
-            return { type: THIS_EXP };
-        } else {
-            return {
-                type: IDENTIFIER,
-                name: identifier
-            };
         }
+
+        if (identifier === this_str) {
+            return { type: THIS_EXP };
+        }
+
+        return {
+            type: IDENTIFIER,
+            name: identifier
+        };
     }
 
     /**
@@ -494,9 +537,9 @@ export default class VarStoreParser {
      * until the terminator character `)` or `]` is encountered.
      * e.g. `foo(bar, baz)`, `my_func()`, or `[bar, baz]`
      */
-    gobbleArguments = function (termination) {
-        var ch_i, args = [], node, closed = false;
-        var separator_count = 0;
+    gobbleArguments(termination: number): Node[] {
+        let ch_i: number, args: any[] = [], node: Node, closed: boolean = false;
+        let separator_count: number = 0;
         while (this.index < this.length) {
             this.gobbleSpaces();
             ch_i = this.exprICode(this.index);
@@ -528,9 +571,11 @@ export default class VarStoreParser {
                 args.push(node);
             }
         }
+
         if (!closed) {
             this.throwError('Expected ' + String.fromCharCode(termination), this.index);
         }
+
         return args;
     }
 
@@ -540,8 +585,9 @@ export default class VarStoreParser {
      * It also gobbles function calls:
      * e.g. `Math.acos(obj.angle)`
      */
-    gobbleVariable = function () {
-        var ch_i, node;
+    gobbleVariable(): Node {
+        let ch_i: number, node: Node;
+        
         ch_i = this.exprICode(this.index);
 
         if (ch_i === OPAREN_CODE) {
@@ -549,6 +595,7 @@ export default class VarStoreParser {
         } else {
             node = this.gobbleIdentifier();
         }
+
         this.gobbleSpaces();
         ch_i = this.exprICode(this.index);
         while (ch_i === PERIOD_CODE || ch_i === OBRACK_CODE || ch_i === OPAREN_CODE) {
@@ -595,16 +642,18 @@ export default class VarStoreParser {
      * that the next thing it should see is the close parenthesis. If not,
      * then the expression probably doesn't have a `)`
      */
-    gobbleGroup() {
+    gobbleGroup(): Node {
         this.index++;
-        var node = this.gobbleExpression();
+
+        let node: Node = this.gobbleExpression();
+
         this.gobbleSpaces();
         if (this.exprICode(this.index) === CPAREN_CODE) {
             this.index++;
             return node;
-        } else {
-            this.throwError('Unclosed (', this.index);
         }
+
+        this.throwError('Unclosed (', this.index);
     }
 
     /**
@@ -612,7 +661,7 @@ export default class VarStoreParser {
      * This function assumes that it needs to gobble the opening bracket
      * and then tries to gobble the expressions as arguments.
      */
-    gobbleArray() {
+    gobbleArray(): Node {
         this.index++;
         return {
             type: ARRAY_EXP,
@@ -620,8 +669,8 @@ export default class VarStoreParser {
         };
     }
 
-    parseExpr() {
-        let nodes = [], ch_i, node;
+    parseExpr(): Node {
+        let nodes = [], ch_i: number, node;
         while (this.index < this.length) {
             ch_i = this.exprICode(this.index);
 
@@ -644,11 +693,11 @@ export default class VarStoreParser {
         // If there's only one expression just try returning the expression
         if (nodes.length === 1) {
             return nodes[0];
-        } else {
-            return {
-                type: COMPOUND,
-                body: nodes
-            };
         }
+
+        return {
+            type: COMPOUND,
+            body: nodes
+        };
     }
 }
