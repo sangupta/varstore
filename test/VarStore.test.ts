@@ -4,13 +4,13 @@ import VarStore from './../src/VarStore';
 
 describe("VarStore", () => {
 
-    it("Check negative test cases", () => {
+    it("Test negative constructor test cases", () => {
         expect(() => new VarStore(null)).to.throw();
         expect(() => new VarStore(undefined)).to.throw();
         expect(() => new VarStore('')).to.throw();
     });
 
-    it('Check for simple varstore and read/write values', () => {
+    it('Test simple read/write values', () => {
         const store: VarStore = new VarStore('test');
 
         store.setValue('firstName', 'hello');
@@ -25,7 +25,7 @@ describe("VarStore", () => {
         expect(store.getValue('lastName')).to.equal('world');
     });
 
-    it("Check for various data types including null/undefined", () => {
+    it("Test read/write of different data types on same variable", () => {
         const store: VarStore = new VarStore('test');
 
         store.setValue('name', undefined);
@@ -51,7 +51,7 @@ describe("VarStore", () => {
         expect(store.getValue('name')).to.be.false;
     });
 
-    it("Check for arrays", () => {
+    it("Test read of arrays", () => {
         const store: VarStore = new VarStore('test');
         const array: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -71,7 +71,7 @@ describe("VarStore", () => {
 
     });
 
-    it("Child object tests", () => {
+    it("Test read for child objects", () => {
         const store: VarStore = new VarStore('test');
 
         const employee = {
@@ -93,7 +93,7 @@ describe("VarStore", () => {
         expect(store.getValue('employee.address.web.url')).to.equal('sangupta.com');
     });
 
-    it("Check arrays and objects together", () => {
+    it("Test read of arrays and objects together", () => {
         const store: VarStore = new VarStore('test');
         const data = {
             type: "employees",
@@ -128,7 +128,7 @@ describe("VarStore", () => {
         expect(store.getValue('data.employees[2].name.first')).to.equal('mickey');
     });
 
-    it("Check pushing and popping context", () => {
+    it("Test pushing and popping context", () => {
         const store: VarStore = new VarStore('test');
         store.setValue('name', 'first');
 
@@ -159,7 +159,7 @@ describe("VarStore", () => {
         expect(store.getValue('name')).to.equal('first');
     });
 
-    it("Check forking", () => {
+    it("Test forking", () => {
         const store: VarStore = new VarStore('test');
         const employee = {
             name: {
@@ -191,11 +191,11 @@ describe("VarStore", () => {
         expect(store.getValue('employee.name.username')).to.equal('sangupta');
     });
 
-    it("Check fork/push-pop context/arrays/child objects", () => {
+    it("Test fork/push-pop context/arrays/child objects", () => {
 
     });
 
-    it("Check for set/get value: basic props", () => {
+    it("Test for write values: multiple variables", () => {
         const store: VarStore = new VarStore('test');
 
         store.setValue("name", "hello world");
@@ -209,19 +209,21 @@ describe("VarStore", () => {
         expect(store.getValue('retired')).to.false;
     });
 
-    it("Check for set/get value: child", () => {
+    it("Test for writing child object values", () => {
         const store: VarStore = new VarStore('test');
 
         store.setValue("emp", { empID: 9999 });
         store.setValue("emp.name.first", "hello");
         store.setValue("emp.name.last", "world");
 
+        // store.debug();
+
         expect(store.getValue('emp.name.first')).to.equal("hello");
         expect(store.getValue('emp.name.last')).to.equal("world");
         expect(store.getValue('emp.empID')).to.equal(9999);
     });
 
-    it("Check values inside nested for loops", () => {
+    it("Test for writing values inside nested for loops", () => {
         const store: VarStore = new VarStore('test');
 
         for (let i = 0; i < 100; i++) {
@@ -235,7 +237,7 @@ describe("VarStore", () => {
         }
     });
 
-    it("Check values inside recursive function call", () => {
+    it("Test for push/pop context in recursive function call", () => {
         const store: VarStore = new VarStore('test');
 
         const fact = function (x: number): number {
@@ -253,5 +255,26 @@ describe("VarStore", () => {
 
         expect(fact(10)).to.equal(3628800);
     });
+
+    // it('Test for writing nested arrayed-composed objects', () => {
+    //     const store: VarStore = new VarStore('test');
+
+    //     try {
+    //         store.setValue('employees.names[0].first', 'hello');
+    //         store.setValue('employees.names[1].first', 'world');
+    //         store.setValue('employees.names[1].first', 'world-1');
+    //         store.setValue('employees.names[0].first', 'hello-1');
+    //         store.setValue('employees.names[1].first', 'world-2');
+    //         store.setValue('employees.names[0].first', 'hello-2');
+    //         store.setValue('employees.names[2].first', 'sangupta');
+    //     } catch(e) {
+    //         store.debug();
+    //         throw e;
+    //     }
+    //     // const names = store.getValue('employees.names');
+    //     // expect(Array.isArray(names)).to.true;
+    //     // expect(typeof names[0]).to.equal('object');
+
+    // });
 
 });

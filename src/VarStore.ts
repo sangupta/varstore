@@ -1,4 +1,5 @@
 import * as VarStoreUtils from "./VarStoreUtils";
+import VarStoreEvaluator from "./VarStoreEvaluator";
 
 /**
  * A scoped store that can be used to store variables 
@@ -173,5 +174,21 @@ export default class VarStore {
      */
     popContext(): object {
         return this.stack.pop();
+    }
+
+    /**
+     * Evaluate the expression against this store.
+     * 
+     * @param expr 
+     */
+    evaluate(expr: string): any {
+        return VarStoreEvaluator.evaluate(expr, this);
+    }
+
+    debug(): void {
+        for (let i = 0; i < this.stack.length; i++) {
+            let item = this.stack[i];
+            console.log('@[' + i + ']: ', JSON.stringify(item));
+        }
     }
 }
