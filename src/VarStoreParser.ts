@@ -182,9 +182,11 @@ export default class VarStoreParser {
      * The main parsing function. Much of this code is dedicated to ternary expressions
      */
     gobbleExpression() {
-        var test = this.gobbleBinaryExpression(),
-            consequent, alternate;
+        let test = this.gobbleBinaryExpression();
+        let consequent, alternate;
+
         this.gobbleSpaces();
+
         if (this.exprICode(this.index) === QUMARK_CODE) {
             // Ternary expression: test ? consequent : alternate
             this.index++;
@@ -205,12 +207,12 @@ export default class VarStoreParser {
                     consequent: consequent,
                     alternate: alternate
                 };
-            } else {
-                this.throwError('Expected :', this.index);
             }
-        } else {
-            return test;
+
+            this.throwError('Expected :', this.index);
         }
+
+        return test;
     }
 
     /**
@@ -313,37 +315,40 @@ export default class VarStoreParser {
         if (isDecimalDigit(ch) || ch === PERIOD_CODE) {
             // Char code 46 is a dot `.` which can start off a numeric literal
             return this.gobbleNumericLiteral();
-        } else if (ch === SQUOTE_CODE || ch === DQUOTE_CODE) {
+        }
+
+        if (ch === SQUOTE_CODE || ch === DQUOTE_CODE) {
             // Single or double quotes
             return this.gobbleStringLiteral();
-        } else if (ch === OBRACK_CODE) {
+        }
+        if (ch === OBRACK_CODE) {
             return this.gobbleArray();
-        } else {
-            to_check = this.expr.substr(this.index, max_unop_len);
-            tc_len = to_check.length;
-            while (tc_len > 0) {
-                // Don't accept an unary op when it is an identifier.
-                // Unary ops that start with a identifier-valid character must be followed
-                // by a non identifier-part valid character
-                if (unary_ops.hasOwnProperty(to_check) && (
-                    !isIdentifierStart(this.exprICode(this.index)) ||
-                    (this.index + to_check.length < this.expr.length && !isIdentifierPart(this.exprICode(this.index + to_check.length)))
-                )) {
-                    this.index += tc_len;
-                    return {
-                        type: UNARY_EXP,
-                        operator: to_check,
-                        argument: this.gobbleToken(),
-                        prefix: true
-                    };
-                }
-                to_check = to_check.substr(0, --tc_len);
-            }
+        }
 
-            if (isIdentifierStart(ch) || ch === OPAREN_CODE) { // open parenthesis
-                // `foo`, `bar.baz`
-                return this.gobbleVariable();
+        to_check = this.expr.substr(this.index, max_unop_len);
+        tc_len = to_check.length;
+        while (tc_len > 0) {
+            // Don't accept an unary op when it is an identifier.
+            // Unary ops that start with a identifier-valid character must be followed
+            // by a non identifier-part valid character
+            if (unary_ops.hasOwnProperty(to_check) && (
+                !isIdentifierStart(this.exprICode(this.index)) ||
+                (this.index + to_check.length < this.expr.length && !isIdentifierPart(this.exprICode(this.index + to_check.length)))
+            )) {
+                this.index += tc_len;
+                return {
+                    type: UNARY_EXP,
+                    operator: to_check,
+                    argument: this.gobbleToken(),
+                    prefix: true
+                };
             }
+            to_check = to_check.substr(0, --tc_len);
+        }
+
+        if (isIdentifierStart(ch) || ch === OPAREN_CODE) { // open parenthesis
+            // `foo`, `bar.baz`
+            return this.gobbleVariable();
         }
 
         return false;
@@ -374,9 +379,11 @@ export default class VarStoreParser {
             if (ch === '+' || ch === '-') { // exponent sign
                 number += this.exprI(this.index++);
             }
+
             while (isDecimalDigit(this.exprICode(this.index))) { //exponent itself
                 number += this.exprI(this.index++);
             }
+
             if (!isDecimalDigit(this.exprICode(this.index - 1))) {
                 this.throwError('Expected exponent (' + number + this.exprI(this.index) + ')', this.index);
             }
@@ -386,9 +393,10 @@ export default class VarStoreParser {
         chCode = this.exprICode(this.index);
         // Check to make sure this isn't a variable name that start with a number (123abc)
         if (isIdentifierStart(chCode)) {
-            this.throwError('Variable names cannot start with a number (' +
-                number + this.exprI(this.index) + ')', this.index);
-        } else if (chCode === PERIOD_CODE) {
+            this.throwError('Variable names cannot start with a number (' + number + this.exprI(this.index) + ')', this.index);
+        }
+        
+        if (chCode === PERIOD_CODE) {
             this.throwError('Unexpected period', this.index);
         }
 
@@ -448,12 +456,11 @@ export default class VarStoreParser {
     gobbleIdentifier() {
         var ch = this.exprICode(this.index), start = this.index, identifier;
 
-        if (isIdentifierStart(ch)) {
-            this.index++;
-        } else {
+        if (!isIdentifierStart(ch)) {
             this.throwError('Unexpected ' + this.exprI(this.index), this.index);
         }
 
+        this.index++;
         while (this.index < this.length) {
             ch = this.exprICode(this.index);
             if (isIdentifierPart(ch)) {
