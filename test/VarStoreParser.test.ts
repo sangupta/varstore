@@ -1,6 +1,5 @@
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import VarStore from './../src/VarStore';
 import VarStoreParser from './../src/VarStoreParser';
 
 describe('VarStoreParser', () => {
