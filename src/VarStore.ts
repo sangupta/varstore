@@ -47,6 +47,7 @@ export default class VarStore {
         this.name = name;
         this.parent = parent;
         this.stack.push(initialState);
+        this.scopePointer = 0;
     }
 
     /**
@@ -191,4 +192,13 @@ export default class VarStore {
             console.log('@[' + i + ']: ', JSON.stringify(item));
         }
     }
+
+    getStore(): any {
+        if (this.stack.length === 0) {
+            return {};
+        }
+
+        return this.stack[0];
+    }
+
 }
