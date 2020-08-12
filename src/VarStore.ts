@@ -1,6 +1,6 @@
 import * as VarStoreUtils from "./VarStoreUtils";
 import VarStoreEvaluator from "./VarStoreEvaluator";
-import VarStoreParser, { Node } from './VarStoreParser';
+import VarStoreParser, { Node, NodeAndIdentifiers } from './VarStoreParser';
 
 /**
  * A scoped store that can be used to store variables 
@@ -243,7 +243,7 @@ export default class VarStore {
      * 
      * @param expr 
      */
-    parseExpression(expr: string): Node {
+    parseExpression(expr: string): NodeAndIdentifiers {
         if (!expr) {
             return null;
         }

@@ -26,6 +26,16 @@ export interface Node {
     alternate?: Node;
 };
 
+export class NodeAndIdentifiers {
+    node: Node;
+    identifiers: string[];
+
+    constructor(node: Node, identifiers: string[]) {
+        this.node = node;
+        this.identifiers = identifiers;
+    }
+}
+
 /**
  * This is the full set of types that any JSEP node can be.
  * Store them here to save space when minified
@@ -171,13 +181,23 @@ export default class VarStoreParser {
      */
     length: number;
 
+    /**
+     * Stores list of all identifiers that were encountered while
+     * parsing this expression
+     */
+    identifiers: string[] = [];
+
     constructor(expr: string) {
         this.expr = expr;
         this.length = expr.length;
     }
 
-    static parse(expr: string): Node {
-        return new VarStoreParser(expr).parseExpr();
+    static parse(expr: string): NodeAndIdentifiers {
+        const parser = new VarStoreParser(expr);
+        const node: Node = parser.parseExpr();
+        const identifiers: string[] = parser.identifiers;
+
+        return new NodeAndIdentifiers(node, identifiers);
     }
 
     exprI(i: number): string {
@@ -523,6 +543,8 @@ export default class VarStoreParser {
         if (identifier === this_str) {
             return { type: THIS_EXP };
         }
+
+        this.identifiers.push(identifier);
 
         return {
             type: IDENTIFIER,
