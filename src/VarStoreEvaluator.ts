@@ -125,6 +125,7 @@ export default class VarStoreEvaluator {
 
     static evaluate(expr: string, store: VarStore): any {
         const node: Node = VarStoreParser.parse(expr);
+        console.log('parsed node: ', node);
         return VarStoreEvaluator.evaluateNode(node, store);
     }
 

@@ -1,5 +1,6 @@
 import * as VarStoreUtils from "./VarStoreUtils";
 import VarStoreEvaluator from "./VarStoreEvaluator";
+import VarStoreParser, { Node } from './VarStoreParser';
 
 /**
  * A scoped store that can be used to store variables 
@@ -18,18 +19,17 @@ export default class VarStore {
      * 
      */
     private readonly stack: object[] = [];
+
     /**
      * A human readable name for this store.
      */
     private readonly name: string;
 
     /**
-     * The pointer to the actual scope. More context
-     * can be added to the store and then popped, so we 
-     * need to know where the base store is, to be able
-     * to 
+     * Holds a list of all watchers that are subscribed to
+     * any key in this store.
      */
-    private scopePointer: number = -1;
+    private watchers: {} = {};
 
     /**
      * Construct a freshly new store with no parent, and no
@@ -47,7 +47,6 @@ export default class VarStore {
         this.name = name;
         this.parent = parent;
         this.stack.push(initialState);
-        this.scopePointer = 0;
     }
 
     /**
@@ -61,8 +60,10 @@ export default class VarStore {
      * Create a new scoped store for the given parent and
      * given additional initial state.
      * 
-     * @param parent 
-     * @param additionalContext 
+     * @param name the name of the new forked `varstore`
+     * 
+     * @param initialState the initial state that is merged
+     * from the parent (which is `this` store)
      */
     fork(name: string, initialState: object = {}): VarStore {
         return new VarStore(name, initialState, this);
@@ -72,7 +73,7 @@ export default class VarStore {
      * Check if the variable exists in the store or
      * not.
      * 
-     * @param id 
+     * @param id the key to be checked in store
      */
     exists(id: string): boolean {
         const result: VarStoreUtils.ExistsWithValue = this.getVariable(id);
@@ -87,7 +88,7 @@ export default class VarStore {
      * Get the value of the variable stored in
      * this store.
      * 
-     * @param id
+     * @param id the key for which the value is needed
      */
     getValue(id: string): any {
         const result: VarStoreUtils.ExistsWithValue = this.getVariable(id);
@@ -101,7 +102,7 @@ export default class VarStore {
     /**
      * Get the variable and its existence from the store.
      * 
-     * @param id 
+     * @param id the key for which existence and value are needed
      */
     private getVariable(id: string): VarStoreUtils.ExistsWithValue {
         if (this.stack.length === 0) {
@@ -135,8 +136,44 @@ export default class VarStore {
         return undefined;
     }
 
+    /**
+     * Get the current context from this store.
+     * 
+     */
     private getContext(): object {
         return this.stack[this.stack.length - 1];
+    }
+
+    /**
+     * Signal a touch on the key. This will invoke
+     * any handlers that are attached to this key.
+     * 
+     * @param id the key that is touched
+     * 
+     * @param value (optional) the value to be sent to
+     * watchers as part of this touch. If no value is
+     * provided, the current value from store is sent.
+     */
+    touch(id: string, value: any = undefined): void {
+        if (!id) {
+            return;
+        }
+
+        // check for all subscribers and fire them
+        let list: Array<Function> = this.watchers[id];
+        if (!list) {
+            return;
+        }
+
+        // get value from store
+        if (value === undefined) {
+            value = this.getValue(id);
+        }
+
+        // invoke each handler as a timeout
+        list.forEach(handler => {
+            setTimeout(handler, 0, [id, value]);
+        });
     }
 
     /**
@@ -145,7 +182,13 @@ export default class VarStore {
      * @param value 
      */
     setValue(id: string, value: any): boolean {
-        return VarStoreUtils.setValue(this.getContext(), id, value);
+        const result = VarStoreUtils.setValue(this.getContext(), id, value);
+
+        // invoke handlers
+        this.touch(id, value);
+
+        // return final result
+        return result;
     }
 
     /**
@@ -180,12 +223,37 @@ export default class VarStore {
     /**
      * Evaluate the expression against this store.
      * 
-     * @param expr 
+     * @param expr string based expression to evaluate
      */
     evaluate(expr: string): any {
         return VarStoreEvaluator.evaluate(expr, this);
     }
 
+    /**
+     * Evaluate an already parsed node against this store.
+     * 
+     * @param node already parsed node
+     */
+    evaluateNode(node: any): any {
+        return VarStoreEvaluator.evaluateNode(node, this);
+    }
+
+    /**
+     * Parse a given expression and return its AST node.
+     * 
+     * @param expr 
+     */
+    parseExpression(expr: string): Node {
+        if (!expr) {
+            return null;
+        }
+
+        return VarStoreParser.parse(expr);;
+    }
+
+    /**
+     * Print debugging information
+     */
     debug(): void {
         for (let i = 0; i < this.stack.length; i++) {
             let item = this.stack[i];
@@ -193,12 +261,66 @@ export default class VarStore {
         }
     }
 
+    /**
+     * Return the base store object. This does not return
+     * the context's that were added to this store.
+     */
     getStore(): any {
         if (this.stack.length === 0) {
             return {};
         }
 
         return this.stack[0];
+    }
+
+    /**
+     * Subscribe the handler to the given key. This
+     * allows for external clients to observe property
+     * changes.
+     * 
+     * @param key 
+     * @param handler 
+     */
+    subscribe(key: string, handler: Function): void {
+        if (!key) {
+            throw new Error('Need a key to subscribe with');
+        }
+
+        if (!handler) {
+            throw new Error('Need a handler to be invoked');
+        }
+
+        if (key in this.watchers) {
+            this.watchers[key].push(handler);
+            return;
+        }
+
+        let list: Array<Function> = [];
+        list.push(handler);
+        this.watchers[key] = list;
+    }
+
+    /**
+     * Remove a previously attached handler for the given key.
+     * 
+     * @param key key to which handler was bound
+     * 
+     * @param handler the handler to be removed
+     */
+    unsubscribe(key: string, handler: Function): void {
+        if (!key) {
+            throw new Error('Need a key to unsubscribe from');
+        }
+
+        if (!handler) {
+            throw new Error('Need a handler to be removed');
+        }
+
+        if (key in this.watchers) {
+            let list: Array<Function> = this.watchers[key];
+            list = list.filter(item => item !== handler);
+            this.watchers[key] = list;
+        }
     }
 
 }

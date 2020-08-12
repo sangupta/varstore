@@ -29,7 +29,7 @@ const KEY_NOT_EXISTS: ExistsWithValue = { exists: false, value: undefined };
  * 
  * @param id the variable to look for
  */
-export function getExistsWithValue(context: object, id: string): any {
+export function getExistsWithValue(context: object, id: string): ExistsWithValue {
     if (!id) {
         return KEY_NOT_EXISTS;
     }
