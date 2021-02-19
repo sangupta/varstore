@@ -685,6 +685,7 @@ export default class VarStoreParser {
         }
 
         this.throwError('Unclosed (', this.index);
+        return undefined;
     }
 
     /**

@@ -1,6 +1,6 @@
 import * as VarStoreUtils from "./VarStoreUtils";
 import VarStoreEvaluator from "./VarStoreEvaluator";
-import VarStoreParser, { Node, NodeAndIdentifiers } from './VarStoreParser';
+import VarStoreParser, { NodeAndIdentifiers } from './VarStoreParser';
 
 /**
  * A scoped store that can be used to store variables 
