@@ -1,4 +1,4 @@
-import VarStoreParser, { Node } from './VarStoreParser';
+import VarStoreParser, { Node, NodeAndIdentifiers } from './VarStoreParser';
 import VarStore from './VarStore';
 
 /**
@@ -124,9 +124,9 @@ export default class VarStoreEvaluator {
     }
 
     static evaluate(expr: string, store: VarStore): any {
-        const node: Node = VarStoreParser.parse(expr);
-        console.log('parsed node: ', node);
-        return VarStoreEvaluator.evaluateNode(node, store);
+        const parsedExpr: NodeAndIdentifiers = VarStoreParser.parse(expr);
+        console.log('parsed node: ', parsedExpr);
+        return VarStoreEvaluator.evaluateNode(parsedExpr.node, store);
     }
 
 }
