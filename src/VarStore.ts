@@ -91,6 +91,18 @@ export default class VarStore {
      * @param id the key for which the value is needed
      */
     getValue(id: string): any {
+        if(id === 'super') {
+            return this.parent;
+        }
+        
+        if(id.startsWith('super.')) {
+            if(this.parent) {
+                return this.parent.getValue(id.substring(6));
+            }
+
+            throw new Error('Reference to super is undefined for key: ' + id.substring(6));
+        }
+
         const result: VarStoreUtils.ExistsWithValue = this.getVariable(id);
         if (result && result.exists) {
             return result.value;
@@ -182,6 +194,15 @@ export default class VarStore {
      * @param value 
      */
     setValue(id: string, value: any): boolean {
+        if(id.startsWith('super.')) {
+            if(this.parent) {
+                this.parent.setValue(id.substring(6), value);
+                return;
+            }
+
+            throw new Error('Reference to super is undefined for key: ' + id.substring(6));
+        }
+
         const result = VarStoreUtils.setValue(this.getContext(), id, value);
 
         // invoke handlers

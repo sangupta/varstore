@@ -48,11 +48,13 @@ function evaluateArray(list, context: VarStore) {
 
 function evaluateMember(node: Node, context: VarStore) {
     const object = evaluate(node.object, context);
-    if (node.computed) {
-        return [object, object[evaluate(node.property, context)]];
-    }
 
-    return [object, object[node.property.name]];
+    let prop = node.computed ? evaluate(node.property, context) : node.property.name;
+    if(object instanceof VarStore) {
+        return [object, object.getValue(prop)];
+    }
+    
+    return [object, object[prop]];
 }
 
 function evaluate(node: Node, context: VarStore) {
